@@ -1,6 +1,6 @@
-import { ActionType, ItemType } from "../../event/types/index.js";
+import { ActionType, ItemType } from "../types/index.js";
 
-export interface ILogInteraction{
+export interface LogPayload {
   userId: string;
   itemType: ItemType;
   itemId: string;

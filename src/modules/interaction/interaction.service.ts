@@ -1,12 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { ILogInteraction } from './interfaces/index.js';
+import { LogPayload } from './interfaces/index.js';
 import { InteractionRepo } from '../../infrastructure/interaction/interaction.repo.js';
+import { Interaction } from './interaction.entity.js';
+import { EntityNotFoundError } from '../../shared/errors/domain-errors.js';
 
 @Injectable()
 export class InteractionService {
   constructor(private readonly repo: InteractionRepo) {}
 
-  async log(data: ILogInteraction): Promise<void> {
+  async log(data: LogPayload): Promise<Interaction> {
     return this.repo.log(data)
+  }
+
+  async findAll(): Promise<Interaction[]> {
+    return this.repo.findAll();
+  }
+
+  async findByUser(id: string): Promise<Interaction[]> {
+    return this.repo.findByUser(id);
+  }
+
+  async deleteById(id: string): Promise<void> {
+    const isDeleted = await this.repo.deleteById(id);
+    if (!isDeleted) throw new EntityNotFoundError('interaction');
   }
 }

@@ -1,11 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
-import { MyLogger } from '../logger/logger.service.js';
 
 @Injectable()
 export class RmqSetupService implements OnModuleInit {
 
-  private readonly logger = new MyLogger();
+  private readonly logger = new Logger(RmqSetupService.name);
 
   async onModuleInit(): Promise<void> {
     this.logger.log('Setting rmq...');

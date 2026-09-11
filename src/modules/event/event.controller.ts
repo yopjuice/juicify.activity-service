@@ -1,20 +1,20 @@
-import { Controller, UseFilters, UsePipes } from '@nestjs/common';
-import { Payload, Ctx, RmqContext, MessagePattern } from '@nestjs/microservices';
+import { Controller, Logger, UseFilters, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Payload, MessagePattern } from '@nestjs/microservices';
 import { InteractionService } from '../interaction/interaction.service.js';
-import { ItemViewEventDto } from './dto/item-view.dto.js';
-import { ActionType } from './types/index.js';
-import { Channel, Message } from 'amqplib';
+import { ItemViewEventDto } from '../interaction/dto/item-view.dto.js';
+import { ActionType } from '../interaction/types/index.js';
 import { ACTIVITY_PATTERNS } from './event.patterns.js';
 import { RmqExceptionFilter } from '../../infrastructure/rmq/rmq.filter.js';
 import { MyValidationPipe } from '../../shared/utils/validate-dto.js';
-import { MyLogger } from '../../infrastructure/logger/logger.service.js';
+import { RmqAckInterceptor } from '../../infrastructure/rmq/rmq.interceptor.js';
 
 @UsePipes(MyValidationPipe)
 @UseFilters(RmqExceptionFilter)
+@UseInterceptors(RmqAckInterceptor)
 @Controller()
 export class EventController {
 
-  private readonly logger = new MyLogger();
+  private readonly logger = new Logger(EventController.name);
 
   constructor(
     private readonly interactionsService: InteractionService,
@@ -23,11 +23,7 @@ export class EventController {
   @MessagePattern(ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED)
   async handleItemViewed(
     @Payload() data: ItemViewEventDto,
-    @Ctx() context: RmqContext
   ) {
-    const channel: Channel = context.getChannelRef();
-    const originalMsg = context.getMessage() as Message;
-
     await this.interactionsService.log({
       userId: data.userId,
       itemType: data.itemType,
@@ -36,7 +32,6 @@ export class EventController {
       weight: 1,
     });
 
-    channel.ack(originalMsg);
     this.logger.log(`Message ${ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED} (${data.itemType}) handled correctly`);
   }
 

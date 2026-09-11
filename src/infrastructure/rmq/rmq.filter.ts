@@ -1,14 +1,13 @@
-import { Catch, ArgumentsHost, RpcExceptionFilter  } from '@nestjs/common';
+import { Catch, ArgumentsHost, RpcExceptionFilter, Logger  } from '@nestjs/common';
 import {  RmqContext } from '@nestjs/microservices';
 import { Channel, Message } from 'amqplib';
-import { MyLogger } from '../logger/logger.service.js';
 import { of } from 'rxjs';
 
 
 @Catch()
 export class RmqExceptionFilter implements RpcExceptionFilter {
 
-  private readonly logger = new MyLogger();
+  private readonly logger = new Logger(RmqExceptionFilter.name);
 
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToRpc();
