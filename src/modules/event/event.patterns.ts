@@ -9,3 +9,11 @@ export const ACTIVITY_PATTERNS = {
     }
   }
 } as const;
+
+type FlattenValues<T> = T extends string
+  ? T
+  : T extends object
+  ? FlattenValues<T[keyof T]>
+  : never;
+
+export type ActivityPattern = FlattenValues<typeof ACTIVITY_PATTERNS>;
