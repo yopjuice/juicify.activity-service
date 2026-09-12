@@ -18,6 +18,6 @@ export class InteractionController {
   @GrpcMethod('InteractionService', 'GetUserActivity')
   async findByUser(data: GetUserActivityDto): Promise<GetUserActivityResponse> {
     const logs = await this.service.findByUser(data.userId, data.limit);
-    return { logs };
+    return { logs};
   }
 }

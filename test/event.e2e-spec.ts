@@ -9,6 +9,7 @@ import { InteractionFixtures } from '../src/modules/interaction/fixtures/interac
 import { EventRmqClient } from '../src/infrastructure/event/event.client.js';
 import { ACTIVITY_PATTERNS } from '../src/modules/event/event.patterns.js';
 import { InteractionRepo } from '../src/infrastructure/interaction/interaction.repo.js';
+import { waitUntil } from '../src/shared/utils/wait-until.js';
 
 // TODO: add separate database for testing
 describe('Event gRPC (e2e)', () => {
@@ -64,9 +65,18 @@ describe('Event gRPC (e2e)', () => {
 
   it('should create event via RMQ', async () => {
     const dto = InteractionFixtures.logDto();
-    const response = await client.emit(ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED, dto);
+    await client.emit(ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED, dto);
 
-    expect(response).toEqual(undefined);
+
+    await waitUntil(async () => {
+      const response = await interRepo.findByUser(dto.userId, 1);
+      return response.length > 0;
+    })
+
+    const response = await interRepo.findByUser(dto.userId, 1);
+
+    expect(response).toHaveLength(1);
+    expect(response[0].userId).toEqual(dto.userId);
   });
 
 

@@ -69,7 +69,7 @@ describe('InteractionRepo', () => {
       const expected = InteractionFixtures.array();
       vi.mocked(db.run).mockResolvedValue(InteractionFixtures.rawArray());
 
-      const result = await repo.findByUser(expected[0].userId);
+      const result = await repo.findByUser(expected[0].userId, 1);
 
       expect(db.run).toHaveBeenCalled();
       expect(result).toEqual(expected);
@@ -79,7 +79,7 @@ describe('InteractionRepo', () => {
       const expected = [];
       vi.mocked(db.run).mockResolvedValue(expected);
 
-      const result = await repo.findByUser('non-existent-id');
+      const result = await repo.findByUser('non-existent-id', 1);
 
       expect(db.run).toHaveBeenCalled();
       expect(result).toEqual(expected);
