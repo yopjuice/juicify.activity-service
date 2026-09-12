@@ -24,8 +24,9 @@ export class InteractionRepo {
     return interactions.map(item => InteractionMapper.toDomain(item));
   }
 
-  async findByUser(id: string): Promise<Interaction[]> {
-    const interactions = await this.db.run(findUserInteractions, {userId: id});
+  async findByUser(id: string, limit: number): Promise<Interaction[]> {
+    const interactions = await this.db.run(findUserInteractions, {userId: id, limit});
+    console.log({interactions})
     return interactions.map(item => InteractionMapper.toDomain(item));
   }
 

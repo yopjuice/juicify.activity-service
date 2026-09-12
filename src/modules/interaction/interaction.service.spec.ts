@@ -1,5 +1,4 @@
 import { EntityNotFoundError } from '../../shared/errors/domain-errors.js';
-import { Interaction } from './interaction.entity.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { InteractionService } from './interaction.service.js';
 import { InteractionRepo } from '../../infrastructure/interaction/interaction.repo.js';
@@ -71,9 +70,9 @@ describe('InteractionService', () => {
       const expected = InteractionFixtures.array();
       vi.mocked(repo.findByUser).mockResolvedValue(expected);
 
-      const result = await service.findByUser(expected[0].userId);
+      const result = await service.findByUser(expected[0].userId, expected.length);
 
-      expect(repo.findByUser).toHaveBeenCalledWith(expected[0].userId);
+      expect(repo.findByUser).toHaveBeenCalledWith(expected[0].userId, expected.length);
       expect(result).toEqual(expected);
     });
 
@@ -81,7 +80,7 @@ describe('InteractionService', () => {
       const expected = [];
       vi.mocked(repo.findByUser).mockResolvedValue(expected);
 
-      const result = await service.findByUser('non-existent-id');
+      const result = await service.findByUser('non-existent-id', expected.length);
 
       expect(repo.findByUser).toHaveBeenCalled();
       expect(result).toEqual(expected);

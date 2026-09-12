@@ -5,8 +5,9 @@ import {
 import { InteractionProps } from '../interaction.entity.js';
 import { Interaction } from '../interaction.entity.js';
 import { ItemViewEventDto } from '../dto/item-view.dto.js';
-import { ActionType, ItemType } from '../types/index.js';
+import { ActionType, ItemType } from '../../event/types/index.js';
 import { LogPayload } from '../interfaces/index.js';
+import { GetUserActivityDto } from '../dto/get-activity.js';
 
 // Default database object
 const baseDbInteraction = {
@@ -36,6 +37,12 @@ export const InteractionFixtures = {
     userId: baseDbInteraction.user_id,
     itemType: baseDbInteraction.item_type,
     itemId: baseDbInteraction.item_id,
+    ...overrides,
+  }),
+
+  getUserActivityDto: (overrides?: Partial<GetUserActivityDto>): GetUserActivityDto => ({
+    userId: baseDbInteraction.user_id,
+    limit: 5,
     ...overrides,
   }),
 

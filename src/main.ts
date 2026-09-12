@@ -2,10 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module.js';
 import { createRmqServer } from './infrastructure/rmq/rmq.server.js';
 import { MyLogger } from './infrastructure/logger/logger.service.js';
+import { createGrpcServer } from './infrastructure/grpc/grpc.server.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  createGrpcServer(app)
   createRmqServer(app);
 
 

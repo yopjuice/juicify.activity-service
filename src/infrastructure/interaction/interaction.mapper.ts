@@ -1,4 +1,4 @@
-import { ActionType, ItemType } from '../../modules/interaction/types/index.js';
+import { ActionType, ItemType } from '../../modules/event/types/index.js';
 import { Interaction as DomainInteraction } from '../../modules/interaction/interaction.entity.js';
 
 // Database object interface

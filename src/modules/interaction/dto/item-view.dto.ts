@@ -1,5 +1,5 @@
 import { IsUUID, IsNotEmpty, IsIn, IsEnum } from 'class-validator';
-import { ItemType } from '../types/index.js';
+import { ItemType } from '../../event/types/index.js';
 
 export class ItemViewEventDto {
   @IsUUID()

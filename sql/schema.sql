@@ -1,5 +1,5 @@
 CREATE TYPE "ItemType" AS ENUM ('ARTIST', 'ALBUM', 'TRACK');
-CREATE TYPE "ActionType" AS ENUM ('VIEW', 'LIKE', 'DISLIKE', 'PLAYLIST_ADD');
+CREATE TYPE "ActionType" AS ENUM ('VIEW', 'LIKE', 'DISLIKE', 'UNLIKE');
 
 CREATE TABLE user_interactions (
     id UUID DEFAULT gen_random_uuid() NOT NULL,

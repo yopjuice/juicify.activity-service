@@ -22,7 +22,7 @@ export class RmqAckInterceptor implements NestInterceptor {
       // handler finished successfully
       tap(() => {
         channel.ack(originalMsg);
-        this.logger.log(`Message ${originalMsg.properties.correlationId} acknowledged`);
+        this.logger.log(`Message ${rmqContext.getPattern()} acknowledged`);
       }),
       catchError((error) => {
         channel.nack(originalMsg, false, false);

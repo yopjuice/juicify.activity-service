@@ -16,8 +16,8 @@ export class InteractionService {
     return this.repo.findAll();
   }
 
-  async findByUser(id: string): Promise<Interaction[]> {
-    return this.repo.findByUser(id);
+  async findByUser(id: string, limit: number): Promise<Interaction[]> {
+    return this.repo.findByUser(id, limit);
   }
 
   async deleteById(id: string): Promise<void> {

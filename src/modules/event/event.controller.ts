@@ -2,7 +2,7 @@ import { Controller, Logger, UseFilters, UseInterceptors, UsePipes } from '@nest
 import { Payload, MessagePattern } from '@nestjs/microservices';
 import { InteractionService } from '../interaction/interaction.service.js';
 import { ItemViewEventDto } from '../interaction/dto/item-view.dto.js';
-import { ActionType } from '../interaction/types/index.js';
+import { ActionType } from './types/index.js';
 import { ACTIVITY_PATTERNS } from './event.patterns.js';
 import { RmqExceptionFilter } from '../../infrastructure/rmq/rmq.filter.js';
 import { MyValidationPipe } from '../../shared/utils/validate-dto.js';
