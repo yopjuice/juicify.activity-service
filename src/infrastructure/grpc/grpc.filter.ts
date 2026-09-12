@@ -10,9 +10,9 @@ import {
 import { Logger } from '@nestjs/common';
 
 @Catch()
-export class GlobalGrpcExceptionFilter implements RpcExceptionFilter {
+export class GrpcExceptionFilter implements RpcExceptionFilter {
 
-  private readonly logger = new Logger(GlobalGrpcExceptionFilter.name);
+  private readonly logger = new Logger(GrpcExceptionFilter.name);
 
   catch(exception: any, host: ArgumentsHost): Observable<any> {
     let code = status.INTERNAL;

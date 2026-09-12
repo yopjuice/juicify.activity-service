@@ -1,16 +1,14 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { RpcException } from '@nestjs/microservices';
-import * as grpc from '@grpc/grpc-js';
-import {Logger} from '@nestjs/common';
+import { ValidationError } from '../errors/domain-errors.js';
 
 @Injectable()
-export class GrpcValidationPipe implements PipeTransform<any> {
+export class MyValidationPipe implements PipeTransform<any> {
 
-  private readonly logger = new Logger(GrpcValidationPipe.name);
 
   async transform(value: any, { metatype }: ArgumentMetadata) {
+
     // Skip validation if there's no DTO metatype assigned to the payload
     if (!metatype || !this.toValidate(metatype)) {
       return value;
@@ -26,18 +24,17 @@ export class GrpcValidationPipe implements PipeTransform<any> {
         .map((err) => Object.values(err.constraints || {}).join(', '))
         .join('; ');
 
-      this.logger.log(errorMessages);
-      // Throw a proper gRPC RpcException with an INVALID_ARGUMENT code
-      throw new RpcException({
-        code: grpc.status.INVALID_ARGUMENT,
-        message: errorMessages,
-      });
+      throw new ValidationError(errorMessages);
     }
     return value;
   }
 
   private toValidate(metatype: Function): boolean {
     const types: Function[] = [String, Boolean, Number, Array, Object];
+
+    if (types.includes(metatype) || metatype.name.endsWith('Context')) {
+    return false;
+  }
     return !types.includes(metatype);
   }
 }
