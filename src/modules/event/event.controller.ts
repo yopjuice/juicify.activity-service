@@ -7,6 +7,8 @@ import { ACTIVITY_PATTERNS } from './event.patterns.js';
 import { RmqExceptionFilter } from '../../infrastructure/rmq/rmq.filter.js';
 import { MyValidationPipe } from '../../shared/utils/validate-dto.js';
 import { RmqAckInterceptor } from '../../infrastructure/rmq/rmq.interceptor.js';
+import { ItemLikeEventDto } from '../favorite/dto/item-like.dto.js';
+import { FavoriteService } from '../favorite/favorite.service.js';
 
 @UsePipes(MyValidationPipe)
 @UseFilters(RmqExceptionFilter)
@@ -17,14 +19,15 @@ export class EventController {
   private readonly logger = new Logger(EventController.name);
 
   constructor(
-    private readonly interactionsService: InteractionService,
+    private readonly intersService: InteractionService,
+    private readonly favsService: FavoriteService,
   ) { }
 
   @MessagePattern(ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED)
   async handleItemViewed(
     @Payload() data: ItemViewEventDto,
   ) {
-    await this.interactionsService.log({
+    await this.intersService.log({
       userId: data.userId,
       itemType: data.itemType,
       itemId: data.itemId,
@@ -35,31 +38,19 @@ export class EventController {
     this.logger.log(`Message ${ACTIVITY_PATTERNS.CATALOG.ITEM.VIEWED} (${data.itemType}) handled correctly`);
   }
 
-  // @MessagePattern('catalog.track.liked')
-  // async handleTrackLiked(
-  //   @Payload() data: TrackLikeEventDto,
-  //   @Ctx() context: RmqContext,
-  // ) {
-  //   const channel: Channel = context.getChannelRef();
-  //   const originalMsg = context.getMessage() as Message;
-  //
-  //   try {
-  //     await this.interactionsService.log({
-  //       userId: data.userId,
-  //       itemType: ItemType.Track,
-  //       itemId: data.trackId,
-  //       actionType: ActionType.Like,
-  //       weight: 5,
-  //     });
-  //
-  //     await this.favoritesService.addToFavorites(data.userId, 'track', data.trackId);
-  //
-  //
-  //     channel.ack(originalMsg);
-  //   } catch (error) {
-  //
-  //     channel.nack(originalMsg, false, true); 
-  //   }
-  // }
+  @MessagePattern(ACTIVITY_PATTERNS.CATALOG.ITEM.LIKED)
+  async handleTrackLiked(
+    @Payload() data: ItemLikeEventDto,
+  ) {
+    await this.intersService.log({
+      ...data,
+      actionType: ActionType.Like,
+      weight: 5,
+    });
+
+    await this.favsService.add(data);
+
+    this.logger.log(`Message ${ACTIVITY_PATTERNS.CATALOG.ITEM.LIKED} (${data.itemType}) handled correctly`);
+  }
 
 }
