@@ -4,7 +4,7 @@ import {
 } from '../../../infrastructure/favorite/favorite.mapper.js';
 import { FavoriteProps } from '../favorite.entity.js';
 import { Favorite } from '../favorite.entity.js';
-import { ActionType, ItemType } from '../../event/types/index.js';
+import {  ItemType } from '../../event/types/index.js';
 import { AddPayload, DeletePayload, GetbyUserPayload } from '../interfaces/index.js';
 import { ItemLikeEventDto } from '../dto/item-like.dto.js';
 import { CheckFavoriteDto } from '../dto/check-favs.dto.js';
@@ -54,7 +54,7 @@ export const FavoriteFixtures = {
 
   getUserFavoriteDto: (overrides?: Partial<GetFavoriteDto>): GetFavoriteDto => ({
     userId: baseDbFavorite.user_id,
-    itemType: baseDbFavorite.item_type,
+    itemType: 'TRACK',
     ...overrides,
   }),
 
