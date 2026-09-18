@@ -6,6 +6,7 @@ import { RmqSetupService } from "../../infrastructure/rmq/rmq.setup.js";
 import { MyConfigService } from "../../config/config.service.js";
 import { RMQ_QUEUE_NAME, RMQ_QUEUE_OPTIONS } from "../../infrastructure/rmq/rmq.options.js";
 import { EventRmqClient } from "../../infrastructure/event/event.client.js";
+import { FavoriteModule } from "../favorite/favorite.module.js";
 
 @Module({
   controllers: [EventController],
@@ -38,6 +39,7 @@ import { EventRmqClient } from "../../infrastructure/event/event.client.js";
 
 
     InteractionModule,
+    FavoriteModule,
   ]
 })
 export class EventModule { }

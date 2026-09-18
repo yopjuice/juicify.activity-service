@@ -3,6 +3,7 @@ import { EventController } from './event.controller.js';
 import { InteractionService } from '../../modules/interaction/interaction.service.js';
 import { InteractionFixtures } from '../interaction/fixtures/interaction.fixture.js';
 import { createAutoMock } from '../../shared/utils/auto-mock.js';
+import { FavoriteService } from '../favorite/favorite.service.js';
 
 describe('EventController', () => {
   let controller: EventController;
@@ -16,6 +17,10 @@ describe('EventController', () => {
           provide: InteractionService,
           useValue: createAutoMock(InteractionService),
         },
+        {
+          provide: FavoriteService,
+          useValue: createAutoMock(FavoriteService),
+        }
       ],
     }).compile();
 

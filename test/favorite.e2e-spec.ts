@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { AppModule } from '../src/app/app.module.js';
-import { InteractionServiceClient } from '@juice11-micro/contracts';
+import { FavoritesServiceClient } from '@juice11-micro/contracts';
 import {
     grpcLoader,
   grpcPackages,
@@ -10,21 +10,21 @@ import {
 } from '../src/infrastructure/grpc/gprc.options.js';
 import { MyConfigService } from '../src/config/config.service.js';
 import { DatabaseProvider } from '../src/infrastructure/db/db.provider.js';
-import { InteractionRepo } from '../src/infrastructure/interaction/interaction.repo.js';
-import { InteractionFixtures } from '../src/modules/interaction/fixtures/interaction.fixture.js';
+import { FavoriteRepo } from '../src/infrastructure/favorite/favorite.repo.js';
+import { FavoriteFixtures } from '../src/modules/favorite/fixtures/favorite.fixture.js';
 import { GrpcToPromise } from '../src/shared/types/index.js';
-import { InteractionGrpc } from '../src/infrastructure/interaction/interaction.client.js';
+import { FavoriteGrpc } from '../src/infrastructure/favorite/favorite.client.js';
 import getFreePort from 'get-port';
 import { EventRmqClient } from '../src/infrastructure/event/event.client.js';
 
 // TODO: add separate database for testing
-describe('Interaction gRPC (e2e)', () => {
+describe('Favorite gRPC (e2e)', () => {
   let app: INestMicroservice;
-  let wrapper: InteractionGrpc;
-  let client: GrpcToPromise<InteractionServiceClient>;
+  let wrapper: FavoriteGrpc;
+  let client: GrpcToPromise<FavoritesServiceClient>;
   let rmqClient: EventRmqClient;
   let db: DatabaseProvider;
-  let repo: InteractionRepo;
+  let repo: FavoriteRepo;
 
   beforeAll(async () => {
 
@@ -47,7 +47,7 @@ describe('Interaction gRPC (e2e)', () => {
         url: `localhost:${port}`,
         package: grpcPackages,
         protoPath: grpcProtoPaths,
-        loader: grpcLoader,
+        loader: grpcLoader, 
       },
     };
 
@@ -55,18 +55,18 @@ describe('Interaction gRPC (e2e)', () => {
     app = moduleFixture.createNestMicroservice(protoOptions);
     await app.listen();
 
-    wrapper = moduleFixture.get<InteractionGrpc>(InteractionGrpc);
+    wrapper = moduleFixture.get<FavoriteGrpc>(FavoriteGrpc);
     client = wrapper.client;
 
     db = moduleFixture.get<DatabaseProvider>(DatabaseProvider);
-    repo = moduleFixture.get<InteractionRepo>(InteractionRepo);
+    repo = moduleFixture.get<FavoriteRepo>(FavoriteRepo);
 
     rmqClient = moduleFixture.get<EventRmqClient>(EventRmqClient);
   });
 
   afterEach(async () => {
     // Clear database to avoid conflicts
-    await db.query('TRUNCATE TABLE user_interactions CASCADE;');
+    await db.query('TRUNCATE TABLE user_favorites CASCADE;');
   });
 
   afterAll(async () => {
@@ -74,27 +74,49 @@ describe('Interaction gRPC (e2e)', () => {
   });
 
 
-  it('should get all user interactions via gRPC', async () => {
-    const dto = InteractionFixtures.logDto();
-    const log = await repo.log({ ...dto, actionType: 'VIEW', weight: 5 });
+  it('should get all user favorites via gRPC', async () => {
+    const fav = await repo.add(FavoriteFixtures.addDto());
 
-    const response = await client.getUserActivity(InteractionFixtures.getUserActivityDto());
+    const dto = FavoriteFixtures.getUserFavoriteDto();
+    console.log({dto});
+    const response = await client.getUserFavorites(dto);
 
     expect(response).toBeDefined();
-    expect(response).toHaveProperty('logs');
-    expect(response.logs).toHaveLength(1);
-    expect(response.logs[0]).toHaveProperty('id');
-    expect(response.logs[0].userId).toEqual(log.userId);
+    expect(response).toHaveProperty('itemIds');
+    expect(response.itemIds).toHaveLength(1);
+    expect(response.itemIds[0]).toEqual(fav.itemId);
   });
+
+
+  it('should returned checked user favorites via gRPC', async () => {
+    const fav = await repo.add(FavoriteFixtures.addDto())
+
+    const dto = FavoriteFixtures.checkFavoriteDto({itemIds: [fav.itemId]});
+    const response = await client.checkFavorites(dto);
+
+    expect(response).toBeDefined();
+    expect(response).toHaveProperty('results');
+    expect(response.results).toHaveProperty(dto.itemIds[0]);
+    expect(response.results[dto.itemIds[0]]).toEqual(true);
+  });
+
 
 
   describe('Validation errors', () => {
     it.each([
       {
-        method: 'findByUser',
+        method: 'checkFavorites',
         field: 'userId',
-        call: () => client.getUserActivity({ userId: 'invalid-uuid-format', limit: 2 }),
+        call: () =>
+          client.checkFavorites(FavoriteFixtures.checkFavoriteDto({ userId: 'invalid-uuid-format' })),
       },
+      {
+        method: 'checkFavorites',
+        field: 'userId',
+        call: () =>
+          client.getUserFavorites(FavoriteFixtures.getUserFavoriteDto({ userId: 'invalid-uuid-format' })),
+      },
+
     ])(
       'should return gRPC INVALID_ARGUMENT error when $method params are invalid',
       async ({ call, field }) => {

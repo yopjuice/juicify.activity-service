@@ -2,11 +2,8 @@ export const ACTIVITY_PATTERNS = {
   CATALOG: {
     ITEM: {
       VIEWED: 'catalog.item.viewed',
+      LIKED: 'catalog.item.liked',
     },
-
-    TRACK: {
-      LIKED: 'catalog.track.liked',
-    }
   }
 } as const;
 
