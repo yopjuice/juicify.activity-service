@@ -22,7 +22,6 @@ describe('Interaction gRPC (e2e)', () => {
   let app: INestMicroservice;
   let wrapper: InteractionGrpc;
   let client: GrpcToPromise<InteractionServiceClient>;
-  let rmqClient: EventRmqClient;
   let db: DatabaseProvider;
   let repo: InteractionRepo;
 
@@ -61,7 +60,6 @@ describe('Interaction gRPC (e2e)', () => {
     db = moduleFixture.get<DatabaseProvider>(DatabaseProvider);
     repo = moduleFixture.get<InteractionRepo>(InteractionRepo);
 
-    rmqClient = moduleFixture.get<EventRmqClient>(EventRmqClient);
   });
 
   afterEach(async () => {
