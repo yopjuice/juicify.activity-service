@@ -1,26 +1,34 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FavoriteService } from './stats.service.js';
-import { FavoriteRepo } from '../../infrastructure/favorite/favorite.repo.js';
-import { FavoriteFixtures } from './fixtures/favorite.fixture.js';
+import { StatsService } from './stats.service.js';
+import { StatsRepo } from '../../infrastructure/stats/stats.repo.js';
+import { StatsFixtures } from './fixtures/stats.fixture.js';
 import { createAutoMock } from '../../shared/utils/auto-mock.js';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
-describe('FavoriteService', () => {
-  let service: FavoriteService;
-  let repo: FavoriteRepo;
+describe('StatsService', () => {
+  let service: StatsService;
+  let repo: StatsRepo;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FavoriteService,
+        StatsService,
         {
-          provide: FavoriteRepo,
-          useValue: createAutoMock(FavoriteRepo),
+          provide: StatsRepo,
+          useValue: createAutoMock(StatsRepo),
         },
+        {
+          provide: CACHE_MANAGER,
+          useValue: {
+            get: vi.fn(),
+            set: vi.fn(),
+          },
+        }
       ],
     }).compile();
 
-    service = module.get<FavoriteService>(FavoriteService);
-    repo = module.get<FavoriteRepo>(FavoriteRepo);
+    service = module.get<StatsService>(StatsService);
+    repo = module.get<StatsRepo>(StatsRepo);
 
     vi.clearAllMocks();
   });
@@ -29,44 +37,30 @@ describe('FavoriteService', () => {
     expect(repo).toBeDefined();
   });
 
-  describe('checkFavorite', () => {
-    it('should return a list of favorites', async () => {
-      const expected = FavoriteFixtures.idsArray();
-      vi.mocked(repo.getLikedSubset).mockResolvedValue(expected);
 
-      const payload = FavoriteFixtures.checkFavoriteDto();
+  describe('getTopItems', () => {
+    it('should return a list of top items', async () => {
+      const expected = StatsFixtures.array();
+      vi.mocked(repo.getTopItems).mockResolvedValue(expected);
 
-      const result = await service.getLikedSubset(payload);
+      const dto = StatsFixtures.getTopItemsDto();
 
-      expect(repo.getLikedSubset).toHaveBeenCalled();
-      expect(result).toBeInstanceOf(Array);
-    });
-  });
+      const result = await service.getTopItems(dto);
 
-  describe('getUserFavorite', () => {
-    it('should return a list of favorites', async () => {
-      const expected = FavoriteFixtures.idsArray();
-      vi.mocked(repo.getByUser).mockResolvedValue(expected);
-
-      const payload = FavoriteFixtures.getUserFavoritePayload();
-
-      const result = await service.getByUser(payload);
-
-      expect(repo.getByUser).toHaveBeenCalled();
-      expect(result).toBeInstanceOf(Array);
-    });
-
-    it('should return empty list if favs not found', async () => {
-      const expected = [];
-      vi.mocked(repo.getByUser).mockResolvedValue(expected);
-
-      const payload = FavoriteFixtures.getUserFavoritePayload();
-
-      const result = await service.getByUser(payload);
-
-      expect(repo.getByUser).toHaveBeenCalled();
+      expect(repo.getTopItems).toHaveBeenCalled();
       expect(result).toEqual(expected);
     });
 
+    it('should return empty list if no activity detected', async () => {
+      const expected = [];
+      vi.mocked(repo.getTopItems).mockResolvedValue(expected);
+
+      const dto = StatsFixtures.getTopItemsDto();
+
+      const result = await service.getTopItems(dto);
+
+      expect(repo.getTopItems).toHaveBeenCalled();
+      expect(result).toEqual(expected);
+    });
   });
 });

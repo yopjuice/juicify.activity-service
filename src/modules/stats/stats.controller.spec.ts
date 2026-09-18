@@ -1,26 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { InteractionController } from './stats.controller.js';
-import { InteractionService } from './interaction.service.js';
-import { InteractionFixtures } from './fixtures/interaction.fixture.js';
+import { StatsController } from './stats.controller.js';
+import { StatsService } from './stats.service.js';
+import { StatsFixtures } from './fixtures/stats.fixture.js';
 import { createAutoMock } from '../../shared/utils/auto-mock.js';
 
-describe('InteractionController', () => {
-  let controller: InteractionController;
-  let service: InteractionService;
+describe('StatsController', () => {
+  let controller: StatsController;
+  let service: StatsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [InteractionController],
+      controllers: [StatsController],
       providers: [
         {
-          provide: InteractionService,
-          useValue: createAutoMock(InteractionService),
+          provide: StatsService,
+          useValue: createAutoMock(StatsService),
         },
       ],
     }).compile();
 
-    controller = module.get<InteractionController>(InteractionController);
-    service = module.get<InteractionService>(InteractionService);
+    controller = module.get<StatsController>(StatsController);
+    service = module.get<StatsService>(StatsService);
 
     vi.clearAllMocks();
   });
@@ -30,31 +30,31 @@ describe('InteractionController', () => {
   });
 
 
-  describe('findByUser', () => {
-    it('should return a list of interactions', async () => {
-      const expected = InteractionFixtures.array();
-      vi.mocked(service.findByUser).mockResolvedValue(expected);
+  describe('getTopItems', () => {
+    it('should return a list of top items', async () => {
+      const expected = StatsFixtures.array();
+      vi.mocked(service.getTopItems).mockResolvedValue(expected);
 
-      const dto = InteractionFixtures.getUserActivityDto({ userId: expected[0].userId });
+      const dto = StatsFixtures.getTopItemsDto();
 
-      const result = await controller.findByUser(dto);
+      const result = await controller.getTopItems(dto);
 
-      expect(service.findByUser).toHaveBeenCalled();
-      expect(result).toHaveProperty('logs');
-      expect(result.logs).toEqual(expected);
+      expect(service.getTopItems).toHaveBeenCalled();
+      expect(result).toHaveProperty('items');
+      expect(result.items).toEqual(expected);
     });
 
-    it('should return empty list if logs not found', async () => {
+    it('should return empty list if no activity detected', async () => {
       const expected = [];
-      vi.mocked(service.findByUser).mockResolvedValue(expected);
+      vi.mocked(service.getTopItems).mockResolvedValue(expected);
 
-      const dto = InteractionFixtures.getUserActivityDto();
+      const dto = StatsFixtures.getTopItemsDto();
 
-      const result = await controller.findByUser(dto);
+      const result = await controller.getTopItems(dto);
 
-      expect(service.findByUser).toHaveBeenCalled();
-      expect(result).toHaveProperty('logs');
-      expect(result.logs).toEqual(expected);
+      expect(service.getTopItems).toHaveBeenCalled();
+      expect(result).toHaveProperty('items');
+      expect(result.items).toEqual(expected);
     });
   });
 

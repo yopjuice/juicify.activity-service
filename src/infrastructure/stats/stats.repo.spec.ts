@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FavoriteRepo } from './favorite.repo.js';
+import { StatsRepo } from './stats.repo.js';
 import { DatabaseProvider } from '../db/db.provider.js';
-import { FavoriteFixtures } from '../../modules/favorite/fixtures/favorite.fixture.js';
+import { StatsFixtures } from '../../modules/stats/fixtures/stats.fixture.js';
 import { createAutoMock } from '../../shared/utils/auto-mock.js';
 
-describe('FavoriteRepo', () => {
-  let repo: FavoriteRepo;
+describe('StatsRepo', () => {
+  let repo: StatsRepo;
   let db: DatabaseProvider;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FavoriteRepo,
+        StatsRepo,
         {
           provide: DatabaseProvider,
           useValue: createAutoMock(DatabaseProvider),
@@ -19,7 +19,7 @@ describe('FavoriteRepo', () => {
       ],
     }).compile();
 
-    repo = module.get<FavoriteRepo>(FavoriteRepo);
+    repo = module.get<StatsRepo>(StatsRepo);
     db = module.get<DatabaseProvider>(DatabaseProvider);
 
     vi.clearAllMocks();
@@ -29,71 +29,33 @@ describe('FavoriteRepo', () => {
     expect(repo).toBeDefined();
   });
 
-  describe('add', () => {
-    it('should return added favorite', async () => {
-      const payload = FavoriteFixtures.addPayload();
-      const expected = FavoriteFixtures.entity();
-      vi.mocked(db.runOne).mockResolvedValue(FavoriteFixtures.raw());
+  describe('getTopItems', () => {
+    it('should return top stats', async () => {
+      const payload = StatsFixtures.getTopItemsPayload();
+      const expected = StatsFixtures.array();
 
-      const result = await repo.add(payload);
+      vi.mocked(db.run).mockResolvedValue(StatsFixtures.rawArray());
 
-      expect(db.runOne).toHaveBeenCalled();
-      expect(result).toEqual(expected);
-    });
-  });
-
-
-  describe('getByUser', () => {
-    it('should return user favorites', async () => {
-      const expected = FavoriteFixtures.array();
-      vi.mocked(db.run).mockResolvedValue(FavoriteFixtures.rawArray());
-
-      const payload = FavoriteFixtures.getUserFavoritePayload();
-
-      const result = await repo.getByUser(payload);
+      const result = await repo.getTopItems(payload);
 
       expect(db.run).toHaveBeenCalled();
-      expect(result).toEqual(expected.map(item => item.itemId));
+      expect(result).toEqual(expected);
     });
 
-    it('should return an empty list if no favorites are found', async () => {
+    it('should return an empty list if no stats are found', async () => {
       const expected = [];
       vi.mocked(db.run).mockResolvedValue(expected);
 
-      const payload = FavoriteFixtures.getUserFavoritePayload();
+      const payload = StatsFixtures.getTopItemsPayload();
 
 
-      const result = await repo.getByUser(payload);
+      const result = await repo.getTopItems(payload);
 
       expect(db.run).toHaveBeenCalled();
       expect(result).toEqual(expected);
     });
   });
 
-  describe('delete', () => {
-    it('should return true on success', async () => {
-      vi.mocked(db.runOne).mockResolvedValue(FavoriteFixtures.raw());
-
-      const payload = FavoriteFixtures.deletePayload();
 
 
-      const result = await repo.delete(payload);
-
-      expect(db.runOne).toHaveBeenCalled();
-      expect(result).toEqual(true);
-    });
-
-    it('should return false on failure', async () => {
-
-      vi.mocked(db.runOne).mockResolvedValue([]);
-
-      const payload = FavoriteFixtures.deletePayload();
-
-
-      const result = await repo.delete(payload);
-
-      expect(db.runOne).toHaveBeenCalled();
-      expect(result).toEqual(true);
-    });
-  });
 });
