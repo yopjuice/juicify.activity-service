@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { AppModule } from '../src/app/app.module.js';
-import { FavoritesServiceClient } from '@juice11-micro/contracts';
+import { StatsServiceClient } from '@juice11-micro/contracts';
 import {
     grpcLoader,
   grpcPackages,
@@ -10,20 +10,20 @@ import {
 } from '../src/infrastructure/grpc/gprc.options.js';
 import { MyConfigService } from '../src/config/config.service.js';
 import { DatabaseProvider } from '../src/infrastructure/db/db.provider.js';
-import { FavoriteRepo } from '../src/infrastructure/favorite/favorite.repo.js';
-import { FavoriteFixtures } from '../src/modules/favorite/fixtures/favorite.fixture.js';
+import { StatsFixtures } from '../src/modules/stats/fixtures/stats.fixture.js';
 import { GrpcToPromise } from '../src/shared/types/index.js';
-import { FavoriteGrpc } from '../src/infrastructure/favorite/favorite.client.js';
+import { StatsGrpc } from '../src/infrastructure/stats/stats.client.js';
 import getFreePort from 'get-port';
-import { EventRmqClient } from '../src/infrastructure/event/event.client.js';
+import { InteractionRepo } from '../src/infrastructure/interaction/interaction.repo.js';
+import { InteractionFixtures } from '../src/modules/interaction/fixtures/interaction.fixture.js';
 
 // TODO: add separate database for testing
-describe('Favorite gRPC (e2e)', () => {
+describe('Stats gRPC (e2e)', () => {
   let app: INestMicroservice;
-  let wrapper: FavoriteGrpc;
-  let client: GrpcToPromise<FavoritesServiceClient>;
+  let wrapper: StatsGrpc;
+  let client: GrpcToPromise<StatsServiceClient>;
   let db: DatabaseProvider;
-  let repo: FavoriteRepo;
+  let interRepo: InteractionRepo;
 
   beforeAll(async () => {
 
@@ -54,16 +54,16 @@ describe('Favorite gRPC (e2e)', () => {
     app = moduleFixture.createNestMicroservice(protoOptions);
     await app.listen();
 
-    wrapper = moduleFixture.get<FavoriteGrpc>(FavoriteGrpc);
+    wrapper = moduleFixture.get<StatsGrpc>(StatsGrpc);
     client = wrapper.client;
 
     db = moduleFixture.get<DatabaseProvider>(DatabaseProvider);
-    repo = moduleFixture.get<FavoriteRepo>(FavoriteRepo);
+    interRepo = moduleFixture.get<InteractionRepo>(InteractionRepo);
   });
 
   afterEach(async () => {
     // Clear database to avoid conflicts
-    await db.query('TRUNCATE TABLE user_favorites CASCADE;');
+    await db.query('TRUNCATE TABLE user_interactions CASCADE;');
   });
 
   afterAll(async () => {
@@ -71,47 +71,26 @@ describe('Favorite gRPC (e2e)', () => {
   });
 
 
-  it('should get all user favorites via gRPC', async () => {
-    const fav = await repo.add(FavoriteFixtures.addDto());
+  it('should get all user stats via gRPC', async () => {
+    const stat = await interRepo.log(InteractionFixtures.logPayload());
 
-    const dto = FavoriteFixtures.getUserFavoriteDto();
-    console.log({dto});
-    const response = await client.getUserFavorites(dto);
-
-    expect(response).toBeDefined();
-    expect(response).toHaveProperty('itemIds');
-    expect(response.itemIds).toHaveLength(1);
-    expect(response.itemIds[0]).toEqual(fav.itemId);
-  });
-
-
-  it('should returned checked user favorites via gRPC', async () => {
-    const fav = await repo.add(FavoriteFixtures.addDto())
-
-    const dto = FavoriteFixtures.checkFavoriteDto({itemIds: [fav.itemId]});
-    const response = await client.checkFavorites(dto);
+    const dto = StatsFixtures.getTopItemsDto();
+    const response = await client.getTopItems(dto);
 
     expect(response).toBeDefined();
-    expect(response).toHaveProperty('results');
-    expect(response.results).toHaveProperty(dto.itemIds[0]);
-    expect(response.results[dto.itemIds[0]]).toEqual(true);
+    expect(response).toHaveProperty('items');
+    expect(response.items).toHaveLength(1);
+    expect(response.items[0]).toEqual({itemId: stat.itemId, score: expect.any(Number)});
   });
-
 
 
   describe('Validation errors', () => {
     it.each([
       {
-        method: 'checkFavorites',
-        field: 'userId',
+        method: 'getTopItems',
+        field: 'itemType',
         call: () =>
-          client.checkFavorites(FavoriteFixtures.checkFavoriteDto({ userId: 'invalid-uuid-format' })),
-      },
-      {
-        method: 'checkFavorites',
-        field: 'userId',
-        call: () =>
-          client.getUserFavorites(FavoriteFixtures.getUserFavoriteDto({ userId: 'invalid-uuid-format' })),
+          client.getTopItems(StatsFixtures.getTopItemsDto({ itemType: 'invalid-item-type' } as any)),
       },
 
     ])(
