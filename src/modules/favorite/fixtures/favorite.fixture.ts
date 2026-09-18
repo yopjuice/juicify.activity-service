@@ -64,7 +64,7 @@ export const FavoriteFixtures = {
     ...overrides,
   }),
 
-  DeletePayload: (overrides?: Partial<DeletePayload>): DeletePayload => ({
+  deletePayload: (overrides?: Partial<DeletePayload>): DeletePayload => ({
     userId: baseDbFavorite.user_id,
     itemId: baseDbFavorite.item_id,
     itemType: baseDbFavorite.item_type,
